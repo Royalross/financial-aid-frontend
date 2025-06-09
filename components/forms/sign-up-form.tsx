@@ -30,8 +30,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
     setIsLoading(true);
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const response = await axios.post(
-        'http://localhost:8080/auth/register',
+        `${apiUrl}/auth/register`,
         {
           email: email,
           username: username,

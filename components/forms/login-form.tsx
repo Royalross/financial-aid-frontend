@@ -22,8 +22,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     setIsLoading(true);
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const response = await axios.post(
-        'http://localhost:8080/auth/login',
+        `${apiUrl}/auth/login`,
         {
           login: login,
           password: password,

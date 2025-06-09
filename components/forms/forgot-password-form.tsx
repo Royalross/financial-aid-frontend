@@ -14,7 +14,26 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleForgotPassword = async () => {};
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      await axios.post(
+        `${apiUrl}/auth/forgot-password`,
+        { email },
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+      setSuccess(true);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail || err.response?.data?.message || 'Unable to send reset email',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

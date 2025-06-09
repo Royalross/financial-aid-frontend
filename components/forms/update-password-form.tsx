@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import axios from 'axios';
 
 export function UpdatePasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [password, setPassword] = useState('');
@@ -14,7 +15,28 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleForgotPassword = async (e: React.FormEvent) => {};
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const searchParams = new URLSearchParams(window.location.search);
+      const token = searchParams.get('token');
+      await axios.post(
+        `${apiUrl}/auth/update-password`,
+        { password, token },
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+      router.push('/auth/login');
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail || err.response?.data?.message || 'Unable to update password',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

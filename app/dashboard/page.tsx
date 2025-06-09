@@ -24,8 +24,9 @@ export default function Page() {
       return;
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     axios
-      .get<User>('http://localhost:8080/auth/user/me', {
+      .get<User>(`${apiUrl}/auth/user/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

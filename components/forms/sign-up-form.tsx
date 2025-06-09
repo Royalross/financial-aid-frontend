@@ -46,7 +46,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       );
 
       // Registration successful!
-      router.push('/'); // Redirect to login or home page
+      router.push('/'); // Redirect to log in or home page
       console.log(response);
     } catch (err: any) {
       // Show backend error, if present

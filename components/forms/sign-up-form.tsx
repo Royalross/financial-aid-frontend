@@ -30,13 +30,15 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
     setIsLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const apiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) throw new Error('API_URL is not defined');
+
       const response = await axios.post(
         `${apiUrl}/auth/register`,
         {
-          email: email,
-          username: username,
-          password: password,
+          email,
+          username,
+          password,
         },
         {
           headers: {
@@ -48,9 +50,23 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       // Registration successful!
       router.push('/'); // Redirect to log in or home page
       console.log(response);
-    } catch (err: any) {
-      // Show backend error, if present
-      setError(err.response?.data || 'Failed to register. Please try again.');
+    } catch (err: unknown) {
+      let errorMsg = err instanceof Error ? err.message : 'Failed to register. Please try again.';
+
+      if (axios.isAxiosError(err) && err.response) {
+        const data = err.response.data;
+        if (typeof data === 'object' && data !== null) {
+          if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          } else if ('message' in data && typeof data.message === 'string') {
+            errorMsg = data.message;
+          }
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

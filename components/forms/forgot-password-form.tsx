@@ -9,8 +9,6 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import axios from 'axios';
 
-
-
 export function ForgotPasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -21,23 +19,38 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const apiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) throw new Error('API_URL is not defined');
+
       await axios.post(
         `${apiUrl}/auth/forgot-password`,
         { email },
         { headers: { 'Content-Type': 'application/json' } },
       );
       setSuccess(true);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail || err.response?.data?.message || 'Unable to send reset email',
-      );
+    } catch (err: unknown) {
+      let errorMsg = 'Unable to send reset email';
+
+      if (axios.isAxiosError(err) && err.response) {
+        const data = err.response.data;
+        if (typeof data === 'object' && data !== null) {
+          if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          } else if ('message' in data && typeof data.message === 'string') {
+            errorMsg = data.message;
+          }
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       {success ? (

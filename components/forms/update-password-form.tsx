@@ -19,20 +19,39 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const apiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) throw new Error('API_URL is not defined');
+
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token');
+      if (!token) throw new Error('Reset token not found in URL');
+
       await axios.post(
         `${apiUrl}/auth/update-password`,
         { password, token },
         { headers: { 'Content-Type': 'application/json' } },
       );
+
       router.push('/auth/login');
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail || err.response?.data?.message || 'Unable to update password',
-      );
+    } catch (err: unknown) {
+      let errorMsg = 'Unable to update password';
+
+      if (axios.isAxiosError(err) && err.response) {
+        const data = err.response.data;
+        if (typeof data === 'object' && data !== null) {
+          if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          } else if ('message' in data && typeof data.message === 'string') {
+            errorMsg = data.message;
+          }
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

@@ -7,7 +7,6 @@ type User = {
   username: string;
   email: string;
   role: string;
-  [key: string]: any;
 };
 
 export default function Page() {

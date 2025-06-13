@@ -22,40 +22,40 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const apiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) throw new Error('API_URL is not defined');
+
       const response = await axios.post(
         `${apiUrl}/auth/login`,
-        {
-          login: login,
-          password: password,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
+        { login, password },
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
       // The backend returns { token: "...", tokenType: "Bearer" }
       const token = response.data.token;
-      const tokenType = response.data.tokenType || 'Bearer'; // fallback to Bearer if not present
+      const tokenType = response.data.tokenType || 'Bearer';
 
-      // Store both if you want, but usually just the token is enough
       localStorage.setItem('token', token);
       localStorage.setItem('tokenType', tokenType);
-
-      // (Optional) If you need the login for user requests later, you can store it too:
       localStorage.setItem('login', login);
 
-      // Redirect to the app/dashboard
-      router.push('/dashboard'); // or your desired route
-    } catch (err: any) {
-      // Try to display a meaningful error
-      let errorMsg =
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        (typeof err.response?.data === 'string' ? err.response.data : null) ||
-        'Invalid email or password';
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      let errorMsg = 'Invalid email or password';
+
+      if (axios.isAxiosError(err) && err.response) {
+        const data = err.response.data;
+        if (typeof data === 'object' && data !== null) {
+          if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          } else if ('message' in data && typeof data.message === 'string') {
+            errorMsg = data.message;
+          }
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+
       setError(errorMsg);
     } finally {
       setIsLoading(false);
